@@ -20,7 +20,160 @@
 
 <body>
 
-  Sal Sucks, Did you get the free .me domain name and 1 year free hosting?
+  <pre>
+#define&nbsp;REPEATRATE&nbsp;5&nbsp;&nbsp;<span style="color: #434F54;">// milliseconds</span>
+
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnUp = 0; <span style="color: #434F54;">//up</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnRight = 1; <span style="color: #434F54;">//right</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnDown = 2;  <span style="color: #434F54;">//down</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnLeft = 3;  <span style="color: #434F54;">//left</span>
+
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnSelect = 4;  <span style="color: #434F54;">//enter</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnStart = 5;  <span style="color: #434F54;">//s</span>
+
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnB = 7;  <span style="color: #434F54;">//space</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnA = 8;  <span style="color: #434F54;">//w</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnY = 10;  <span style="color: #434F54;">//z</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnX = 9; <span style="color: #434F54;">//x</span>
+
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnTrigLeft = 6;  <span style="color: #434F54;">//c</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnTrigRight = 23;  <span style="color: #434F54;">//5</span>
+
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnEsc = 22;  <span style="color: #434F54;">//esc</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnPone = 21;  <span style="color: #434F54;">//1</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnPinR = 20;  <span style="color: #434F54;">//3</span>
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinBtnPinL = 19; <span style="color: #434F54;">//4</span>
+
+
+
+<span style="color: #00979C;">const</span> <span style="color: #00979C;">int</span> pinLEDOutput = 13;
+
+<span style="color: #434F54;">//Variables&nbsp;for&nbsp;the&nbsp;states&nbsp;of&nbsp;the&nbsp;SNES&nbsp;buttons</span>
+<span style="color: #00979C;">byte</span> buttons[] = {  pinBtnUp, pinBtnRight, pinBtnDown, pinBtnLeft, pinBtnSelect, pinBtnStart,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pinBtnB,&nbsp;pinBtnA,&nbsp;pinBtnY,&nbsp;pinBtnX,&nbsp;pinBtnTrigLeft,&nbsp;pinBtnTrigRight,&nbsp;pinBtnEsc,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pinBtnPone,&nbsp;pinBtnPinR,&nbsp;pinBtnPinL
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};&nbsp;
+<span style="color: #00979C;">short</span> keys[] = {  <span style="color: #006699;">KEY_UP</span>, <span style="color: #006699;">KEY_RIGHT</span>, <span style="color: #006699;">KEY_DOWN</span>, <span style="color: #006699;">KEY_LEFT</span>, <span style="color: #006699;">KEY_ENTER</span>, <span style="color: #006699;">KEY_S</span>, <span style="color: #006699;">KEY_SPACE</span>, <span style="color: #006699;">KEY_W</span>, <span style="color: #006699;">KEY_Z</span>, <span style="color: #006699;">KEY_X</span>, 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #006699;">KEY_C</span>, <span style="color: #006699;">KEY_5</span>,<span style="color: #006699;">KEY_ESC</span>, <span style="color: #006699;">KEY_1</span>, <span style="color: #006699;">KEY_3</span>, <span style="color: #006699;">KEY_4</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+
+#define&nbsp;NUMBUTTONS&nbsp;sizeof(buttons)
+
+typedef&nbsp;<span style="color: #00979C;">void</span> KeyFunction_t(<span style="color: #00979C;">uint8_t</span> c);
+
+KeyFunction_t*&nbsp;buttonActive[NUMBUTTONS];
+KeyFunction_t*&nbsp;keyList[]&nbsp;=&nbsp;{myset_key6,&nbsp;myset_key5,&nbsp;myset_key4,&nbsp;myset_key3,&nbsp;myset_key2,&nbsp;myset_key1};
+<span style="color: #00979C;">int</span>            keySlot = sizeof(keyList) / sizeof(KeyFunction_t*);
+
+<span style="color: #00979C;">void</span> <span style="color: #5E6D03;">setup</span>()
+{
+&nbsp;&nbsp;<span style="color: #434F54;">//Setup the pin modes.</span>
+&nbsp;&nbsp;<span style="color: #D35400;">pinMode</span>( pinLEDOutput, <span style="color: #00979C;">OUTPUT</span> );
+
+&nbsp;&nbsp;<span style="color: #434F54;">//Special for the Teensy is the INPUT_PULLUP</span>
+&nbsp;&nbsp;<span style="color: #434F54;">//It enables a pullup resitor on the pin.</span>
+&nbsp;&nbsp;<span style="color: #5E6D03;">for</span> (<span style="color: #00979C;">byte</span> i=0; i&lt; NUMBUTTONS; i++) {
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #D35400;">pinMode</span>(buttons[i], <span style="color: #00979C;">INPUT_PULLUP</span>);
+&nbsp;&nbsp;}
+&nbsp;&nbsp;
+&nbsp;&nbsp;<span style="color: #434F54;">//Uncomment this line to debug the acceleromter values:</span>
+<span style="color: #434F54;">//&nbsp;&nbsp;Serial.begin();</span>
+
+&nbsp;&nbsp;<span style="color: #5E6D03;">for</span> (<span style="color: #00979C;">int</span> i=0; i &lt; NUMBUTTONS; i++) {
+&nbsp;&nbsp;&nbsp;&nbsp;buttonActive[i]&nbsp;=&nbsp;0;
+&nbsp;&nbsp;}
+&nbsp;&nbsp;
+}
+
+<span style="color: #00979C;">void</span> <span style="color: #5E6D03;">loop</span>()
+{
+<span style="color: #434F54;">//&nbsp;&nbsp;//debugging&nbsp;the&nbsp;start&nbsp;button...</span>
+&nbsp;&nbsp;<span style="color: #D35400;">digitalWrite</span> ( pinLEDOutput, <span style="color: #D35400;">digitalRead</span>(pinBtnEsc));
+
+&nbsp;&nbsp;<span style="color: #434F54;">//Progess the SNES controller buttons to send keystrokes.</span>
+&nbsp;&nbsp;fcnProcessButtons();
+&nbsp;&nbsp;
+}
+
+<span style="color: #434F54;">//Function&nbsp;to&nbsp;process&nbsp;the&nbsp;buttons&nbsp;from&nbsp;the&nbsp;SNES&nbsp;controller</span>
+<span style="color: #00979C;">void</span> fcnProcessButtons()
+{&nbsp;
+&nbsp;&nbsp;<span style="color: #D35400;">bool</span> keysPressed = <span style="color: #00979C;">false</span>; 
+&nbsp;&nbsp;<span style="color: #D35400;">bool</span> keysReleased = <span style="color: #00979C;">false</span>;
+&nbsp;&nbsp;
+&nbsp;&nbsp;<span style="color: #434F54;">// run through all the buttons</span>
+&nbsp;&nbsp;<span style="color: #5E6D03;">for</span> (<span style="color: #00979C;">byte</span> i = 0; i &lt; NUMBUTTONS; i++) {
+&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">// are any of them pressed?</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #5E6D03;">if</span> (! <span style="color: #D35400;">digitalRead</span>(buttons[i])) 
+&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//this button is pressed</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keysPressed&nbsp;=&nbsp;<span style="color: #00979C;">true</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #5E6D03;">if</span> (!buttonActive[i])        <span style="color: #434F54;">//was it pressed before?</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;activateButton(i);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//no - activate the keypress</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #5E6D03;">else</span>
+&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//this button is not pressed</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #5E6D03;">if</span> (buttonActive[i]) {        <span style="color: #434F54;">//was it pressed before?</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;releaseButton(i);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//yes - release the keypress</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keysReleased&nbsp;=&nbsp;<span style="color: #00979C;">true</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+&nbsp;&nbsp;
+&nbsp;&nbsp;<span style="color: #5E6D03;">if</span> (keysPressed || keysReleased)
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">send_now</span>();            <span style="color: #434F54;">//update all the keypresses</span>
+
+}
+
+<span style="color: #00979C;">void</span> activateButton(<span style="color: #00979C;">byte</span> index)
+{
+&nbsp;&nbsp;<span style="color: #5E6D03;">if</span> (keySlot)      <span style="color: #434F54;">//any key slots left?</span>
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;keySlot--;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//Push the keySlot stack</span>
+&nbsp;&nbsp;&nbsp;&nbsp;buttonActive[index]&nbsp;=&nbsp;keyList[keySlot];&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//Associate the keySlot function pointer with the button</span>
+&nbsp;&nbsp;&nbsp;&nbsp;(*keyList[keySlot])(keys[index]);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//Call the key slot function to set the key value </span>
+&nbsp;&nbsp;}
+}
+
+<span style="color: #00979C;">void</span> releaseButton(<span style="color: #00979C;">byte</span> index)
+{
+&nbsp;&nbsp;keyList[keySlot]&nbsp;=&nbsp;buttonActive[index];&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//retrieve the keySlot function pointer</span>
+&nbsp;&nbsp;buttonActive[index]&nbsp;=&nbsp;0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//mark the button as no longer pressed</span>
+&nbsp;&nbsp;(*keyList[keySlot])(0);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//release the key slot</span>
+&nbsp;&nbsp;keySlot++;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #434F54;">//pop the keySlot stack</span>
+}
+
+<span style="color: #00979C;">void</span> myset_key1(<span style="color: #00979C;">uint8_t</span> c)
+{
+&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">set_key1</span>(c);
+}
+
+<span style="color: #00979C;">void</span> myset_key2(<span style="color: #00979C;">uint8_t</span> c)
+{
+&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">set_key2</span>(c);
+}
+
+<span style="color: #00979C;">void</span> myset_key3(<span style="color: #00979C;">uint8_t</span> c)
+{
+&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">set_key3</span>(c);
+}
+
+<span style="color: #00979C;">void</span> myset_key4(<span style="color: #00979C;">uint8_t</span> c)
+{
+&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">set_key4</span>(c);
+}
+
+<span style="color: #00979C;">void</span> myset_key5(<span style="color: #00979C;">uint8_t</span> c)
+{
+&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">set_key5</span>(c);
+}
+
+<span style="color: #00979C;">void</span> myset_key6(<span style="color: #00979C;">uint8_t</span> c)
+{
+&nbsp;&nbsp;<span style="color: #D35400;"><b>Keyboard</b></span>.<span style="color: #D35400;">set_key6</span>(c);
+}
+
+</pre>
   
 </body>
 </html>
